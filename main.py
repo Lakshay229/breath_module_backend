@@ -10,7 +10,7 @@ from pydantic import BaseModel, Field
 # ------------------------------------------------------------------
 app = FastAPI(
     title="HCC Biomarker Prediction API",
-    description="Predicts liver tumor risk from ammonia, hydrogen sulphide, acetone, and methane sensor readings.",
+    description="Predicts liver tumor risk from ammonia, hydrogen sulphide, acetone, methane, and temperature sensor readings.",
     version="1.0.0",
 )
 
@@ -53,6 +53,7 @@ class PredictionRequest(BaseModel):
     hydrogen_sulphide: float = Field(..., description="Hydrogen sulphide sensor reading")
     acetone: float = Field(..., description="Acetone sensor reading")
     methane: float = Field(..., description="Methane sensor reading")
+    temperature: float = Field(..., description="Temperature reading (°C)")
     model: str = Field("rf", description="Which model to use: 'rf', 'xgb', or 'knn'")
 
 
@@ -93,8 +94,8 @@ def predict(req: PredictionRequest):
     if not models:
         raise HTTPException(status_code=503, detail="Models not loaded on server.")
 
-    # Feature order MUST match training order: acetone, ammonia, hydrogen_sulfide, methane
-    features = np.array([[req.acetone, req.ammonia, req.hydrogen_sulphide, req.methane]])
+    # Feature order MUST match training order: acetone, ammonia, hydrogen_sulfide, methane, temperature
+    features = np.array([[req.acetone, req.ammonia, req.hydrogen_sulphide, req.methane, req.temperature]])
 
     chosen_model = models[req.model]
 
